@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Calculator, 
@@ -12,13 +13,18 @@ import {
   X,
   Sparkles,
   ShieldCheck,
-  Settings
+  Settings,
+  LogOut,
+  User,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
 import { ModuleType } from '../types';
 
 interface LayoutProps {
   currentModule: ModuleType;
   setModule: (module: ModuleType) => void;
+  onLogout: () => void;
   children: React.ReactNode;
 }
 
@@ -46,8 +52,21 @@ const NavItem = ({
   </button>
 );
 
-const Layout: React.FC<LayoutProps> = ({ currentModule, setModule, children }) => {
+const Layout: React.FC<LayoutProps> = ({ currentModule, setModule, onLogout, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -140,7 +159,7 @@ const Layout: React.FC<LayoutProps> = ({ currentModule, setModule, children }) =
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10">
           <div className="flex items-center">
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -159,21 +178,68 @@ const Layout: React.FC<LayoutProps> = ({ currentModule, setModule, children }) =
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full">
+            <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
-                AD
-              </div>
-              <span className="hidden md:block text-sm font-medium text-slate-700">Admin User</span>
+            
+            {/* User Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button 
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center space-x-2 hover:bg-slate-100 p-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm shadow-sm">
+                  AD
+                </div>
+                <div className="hidden md:flex flex-col items-start text-xs">
+                   <span className="font-bold text-slate-700">Admin User</span>
+                   <span className="text-slate-500">Super Admin</span>
+                </div>
+                <ChevronDown size={14} className="text-slate-400 hidden md:block" />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <div className="px-4 py-3 border-b border-slate-100 mb-2">
+                    <p className="text-sm font-bold text-slate-800">Administrator</p>
+                    <p className="text-xs text-slate-500 truncate">admin@uninus.ac.id</p>
+                  </div>
+                  
+                  <div className="px-2 space-y-1">
+                    <button className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                      <User size={16} /> My Profile
+                    </button>
+                    <button 
+                      onClick={() => {
+                         setModule(ModuleType.SETTINGS);
+                         setProfileOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                      <Settings size={16} /> System Settings
+                    </button>
+                    <button className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                      <HelpCircle size={16} /> Help & Support
+                    </button>
+                  </div>
+                  
+                  <div className="border-t border-slate-100 my-2 pt-2 px-2">
+                    <button 
+                      onClick={onLogout}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors font-medium"
+                    >
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
         {/* View Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50">
           {children}
         </main>
       </div>

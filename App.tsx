@@ -20,6 +20,11 @@ const App = () => {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentModule(ModuleType.DASHBOARD);
+  };
+
   const renderModule = () => {
     switch (currentModule) {
       case ModuleType.DASHBOARD:
@@ -48,7 +53,11 @@ const App = () => {
   }
 
   return (
-    <Layout currentModule={currentModule} setModule={setCurrentModule}>
+    <Layout 
+      currentModule={currentModule} 
+      setModule={setCurrentModule}
+      onLogout={handleLogout}
+    >
       {renderModule()}
     </Layout>
   );
